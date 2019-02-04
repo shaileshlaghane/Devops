@@ -1,0 +1,8 @@
+---
+- hosts: devops
+  user: ec2-user
+  sudo: true
+  
+  tasks:
+    - name: Install httpd
+      yum: pkg=httpd state=installed

@@ -1,0 +1,13 @@
+---
+- hosts: devops
+  user: ec2-user
+  become: true
+
+  tasks:
+    - name: service start
+      service: name=httpd state=started enabled=yes
+    - name: run date command
+      command: date
+      register: dateout
+    - debug: var=dateout.stdout_lines
+...

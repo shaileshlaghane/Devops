@@ -1,0 +1,16 @@
+---
+- hosts: devops
+  user: ec2-user
+  become: true
+
+  vars:
+    pack_name: httpd
+    serv_name: httpd
+  tasks:
+    - name: install {{pack_name}} service
+      yum: pkg= {{ pack_name}} state=installed
+      register: packaged
+    - name: start {{serv_name}}
+      service: name= {{serv_name}} state=started
+      register: serviced
+...
