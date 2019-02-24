@@ -1,0 +1,46 @@
+- ec2_instance_facts:
+    aws_access_key: "AKIAJXQTQVFGOCZAHYTQ"
+    aws_secret_key: "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"
+    region: us-east-2
+    filters:
+      "tag:Name": tomcat_deploy
+#     instance-state-name: terminated
+  register: tags
+#- debug: msg="{{tags.instances[0].private_ip_address}}"
+
+- name: Create an ec2 instance
+  ec2:
+    key_name: "{{ keypair }}"
+    aws_access_key: "AKIAJXQTQVFGOCZAHYTQ"
+    aws_secret_key: "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"
+    group: mysecurity  # security group name
+    instance_type: "{{ instance_type}}"
+    image: "{{ ami }}"
+    wait: true
+    region: "{{ region }}"
+    count: 1  # default
+    count_tag:
+      Name: "Demo"
+    instance_tags:
+      Name: "tomcat_deploy"
+    vpc_subnet_id: "subnet-3de48b47"
+    assign_public_ip: yes
+  when: tags.stat.exists
+  register: ec2
+    
+- debug:
+    msg: "{{ item['private_ip'] }}"
+  with_items: "{{ ec2.instances }}"
+
+- name: Add all web instance IPs to host group
+  add_host: 
+    hostname: "{{ item.private_ip }}"
+    groupname: webservers
+    ansible_user: ec2-user 
+  with_items: '{{ ec2.instances }}'
+
+- name: Wait for SSH to come up
+  wait_for: host={{ item.public_dns_name }} port=22 delay=60 timeout=320 state=started
+  with_items: '{{ ec2.instances }}'
+       
+
